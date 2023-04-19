@@ -127,3 +127,5 @@ if __name__ == '__main__':
     rospy.on_shutdown(node.on_shutdown)
     node.run()
     rospy.spin() #paneb koodi uuesti käima, loopi
+
+    #i am retarded hihih hahaha

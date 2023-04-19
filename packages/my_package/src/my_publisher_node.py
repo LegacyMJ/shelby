@@ -7,6 +7,7 @@ from std_msgs.msg import String
 from duckietown_msgs.msg import WheelsCmdStamped
 from smbus2 import SMBus
 import time
+import pid
 speed = WheelsCmdStamped()
 class MyPublisherNode(DTROS):
     def __init__(self, node_name):
@@ -22,14 +23,14 @@ class MyPublisherNode(DTROS):
         self.ki = 0
         self.kd = 0
         self.set_speed = 0.45
-        self.n_tot = 135
+        #self.n_tot = 135
         self.last_error = 0
         self.delta_time = 1/20
-        self.prev_integral = 0
+        #self.prev_integral = 0
         self.odometry_info = 0
         self.correction = 0
         self.error = 0
-        self.integral = 0
+        #self.integral = 0
         self.prev_correction = 0
 
         #---------------------------------------------------------------------------------------------------------------------
@@ -91,12 +92,7 @@ class MyPublisherNode(DTROS):
                 
                 #-----------------------------------PID CONTROLLER------------------------------------------------------------------
 
-                self.integral = self.integral + (self.error + self.last_error)*self.delta_time/2
-                self.integral = max(min(self.integral,2), -2) 
-                derivative = (self.error - self.last_error)/self.delta_time
-                self.last_error = self.error
-
-                correction = self.kp * self.error + self.ki* self.integral + self.kd * derivative
+                correction, self.last_error = pid.PID.PID_controller(self.error, self.last_error, self.kp, self.ki, self.kd)
 
                 if correction > 1 or correction < -1:
                     correction = self.prev_correction
@@ -127,5 +123,3 @@ if __name__ == '__main__':
     rospy.on_shutdown(node.on_shutdown)
     node.run()
     rospy.spin() #paneb koodi uuesti käima, loopi
-
-    #i am retarded hihih hahaha

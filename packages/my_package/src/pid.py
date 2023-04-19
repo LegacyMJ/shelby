@@ -1,17 +1,23 @@
-delta_time = 1/20
 
-def PID_controller(kp, ki, kd, error):
-    integral = integral + (error + last_error)*delta_time/2
-    integral = max(min(integral,2), -2) 
-    derivative = (error - last_error)/delta_time
-    last_error = error
 
-    correction = kp * error + ki* integral + kd * derivative
+class PID:
+    def __init__(self):
+        self.last_error = 0
+        self.delta_time = 1/20
+        self.prev_integral = 0
+        self.odometry_info = 0
+        self.correction = 0
+        self.error = 0
+        self.integral = 0
+        self.prev_correction = 0
 
-    if correction > 1 or correction < -1:
-        correction = prev_correction
-    else:
-        prev_correction = correction
+    def PID_controller(self, error, last_error, kp, ki, kd):
+        self.integral = self.integral + (error + last_error)*self.delta_time/2
+        self.integral = max(min(self.integral,2), -2) 
+        derivative = (error - last_error)/self.delta_time
+        last_error = error
+        correction = kp * self.error + ki * self.integral + kd * derivative
+        return correction, last_error
 
 
 

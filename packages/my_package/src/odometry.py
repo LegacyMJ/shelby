@@ -7,6 +7,7 @@ from duckietown.dtros import DTROS, NodeType
 from duckietown_msgs.msg import WheelEncoderStamped, WheelsCmdStamped
 from sensor_msgs.msg import Range
 import time
+
 speed = WheelsCmdStamped()
 class MyPublisherNode(DTROS):
     def __init__(self, node_name):
@@ -47,6 +48,7 @@ class MyPublisherNode(DTROS):
         self.pub.publish(speed)
         time.sleep(0.2)
         rospy.on_shutdown()
+
     def talker(self):
         rate = rospy.Rate(20) # 20hz
         while not rospy.is_shutdown():
@@ -66,9 +68,9 @@ class MyPublisherNode(DTROS):
             
 
             #string = f"range: {tof}"
-            if self.kaugus_cm <= 20: #õige on 35
+            if self.kaugus_cm <= 35: #õige on 35
                 self.odom.publish("odometry in progress")
-                while self.kaugus_cm <= 20: #tuvastades objekti 35cm kauguselt, pöörab robot paremale
+                while self.kaugus_cm <= 35: #tuvastades objekti 35cm kauguselt, pöörab robot paremale
                     speed.vel_left = 0.33
                     speed.vel_right = 0.05
                     self.pub.publish(speed)

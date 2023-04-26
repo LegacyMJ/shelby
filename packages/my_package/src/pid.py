@@ -1,4 +1,4 @@
-
+# PID: p - 0.045 ; i - 0.001 ; d - 
 
 # class PID:
 #     def __init__(self):
@@ -80,9 +80,9 @@ i_label.grid(row = 2, padx = 5)
 
 d = tk.Scale(root,
              from_ = 0.0,
-             to = 0.5,
+             to = 0.1,
              orient = 'horizontal',
-             resolution = 0.001,
+             resolution = 0.0001,
              length = slider_length,
              command = d_upd)
 d.grid(row = 3,

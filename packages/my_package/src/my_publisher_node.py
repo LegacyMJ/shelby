@@ -23,21 +23,47 @@ class MyPublisherNode(DTROS):
         self.kp = 0.5
         self.ki = 0
         self.kd = 0
-        self.set_speed = 0.45
-        #self.n_tot = 135
+        self.set_speed = 0.358005
         self.last_error = 0
         self.delta_time = 1/20
-        #self.prev_integral = 0
         self.odometry_info = 0
         self.correction = 0
         self.error = 0
-        #self.integral = 0
         self.prev_correction = 0
+
+        self.right_values = [[3,4,5,6,7,8],
+                            [4,5,6,7,8],
+                            [5,6,7,8],
+                            [6,7,8]]
+            
+        self.left_values = [[1,2,3,4,5,6],
+                            [1,2,3,4,5],
+                            [1,2,3,4],
+                            [1,2,3]]
+        
+        self.short_line_values = [[1,2,4,5],
+                                [1,3,4],
+                                [1,4,5],
+                                [1,4],
+                                [1,5,6],
+                                [1,2,4],
+                                [2,3,5,6]]
 
         #---------------------------------------------------------------------------------------------------------------------
 
     def odometry_list(self, data):
         self.odometry_info = data.data
+        
+    def print_data_with_interval(self, correction):
+        self.print_counter = self.print_counter + 1
+        if self.print_counter == 15:
+            print("---| P =", rospy.get_param("/p"),
+                "|---| I =", rospy.get_param("/i"),
+                "|---| D =", rospy.get_param("/d"),
+                '|---| Speed =', rospy.get_param("/maxvel"),
+                '|---| Correction =', round(correction, 3),
+                "|---")
+            self.print_counter = 0
 
     def on_shutdown(self):
         speed.vel_left = 0
@@ -64,30 +90,31 @@ class MyPublisherNode(DTROS):
                 print(self.odometry_info)
 
             elif self.odometry_info == "odometry NOT in progress":
-                sensor = [] #joonelugeri tuvastused vahemikus 1-8
+                sensor = [] #joonelugeri tuvastused vahemikus 1-8   
                 for indx, nr in enumerate(read):
                     if nr == "1":
                         sensor.append(indx + 1)
                 if len(sensor) > 0: 
 
                     #-------------------------SELECTING SHORTER ROUTE---------------------------------------------------------------
-                    #if sorted(set(range(sensor[0], sensor[-1])) - set(sensor)) != []:
-                        #print(sorted(set(range(sensor[0], sensor[-1])) - set(sensor)))
-                        #speed.vel_left = 0.12
-                        #speed.vel_right = 0.2
-                        #self.pub.publish(speed)
-                        #time.sleep(0.75)
+                    if sensor in self.short_line_values:
+                        speed.vel_left = self.set_speed 
+                        speed.vel_right = self.set_speed*0.5
+                        self.pub.publish(speed)
+                        time.sleep(0.75)
+                        print("Short line")
 
                     #-------------------------90 DEG CORNER SOLUTION----------------------------------------------------------------
 
-                    if 8 in sensor:
-                        self.error = 4.5 -  8
-                        self.set_speed = 0.15
-                    elif 1 in sensor:
+                    elif sensor in self.right_values:
+                        self.error = 4.5 - 8
+                        print("Right turn")
+                    elif sensor in self.left_values:
                         self.error = 4.5 - 1
-                        self.set_speed = 0.15
+                        print("Left turn")
                     else:
                         self.error = 4.5 - np.average(sensor)
+
                 else:
                     self.error = 0
                 
@@ -122,7 +149,7 @@ class MyPublisherNode(DTROS):
                 self.previous_right = speed.vel_right
                 speed.vel_left = max(-0.1, min(speed.vel_left, 1)) 
                 speed.vel_right = max(-0.1, min(speed.vel_right, 1)) 
-                #print(correction)
+                print(correction)
                 self.pub.publish(speed)
                 rate.sleep()          
             else:

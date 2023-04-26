@@ -1,23 +1,23 @@
 
 
-class PID:
-    def __init__(self):
-        self.last_error = 0
-        self.delta_time = 1/20
-        self.prev_integral = 0
-        self.odometry_info = 0
-        self.correction = 0
-        self.error = 0
-        self.integral = 0
-        self.prev_correction = 0
+# class PID:
+#     def __init__(self):
+#         self.last_error = 0
+#         self.delta_time = 1/20
+#         self.prev_integral = 0
+#         self.odometry_info = 0
+#         self.correction = 0
+#         self.error = 0
+#         self.integral = 0
+#         self.prev_correction = 0
 
-    def PID_controller(self, error, last_error, kp, ki, kd):
-        self.integral = self.integral + (error + last_error)*self.delta_time/2
-        self.integral = max(min(self.integral,2), -2) 
-        derivative = (error - last_error)/self.delta_time
-        last_error = error
-        correction = kp * self.error + ki * self.integral + kd * derivative
-        return correction, last_error
+#     def PID_controller(self, error, last_error, kp, ki, kd):
+#         self.integral = self.integral + (error + last_error)*self.delta_time/2
+#         self.integral = max(min(self.integral,2), -2) 
+#         derivative = (error - last_error)/self.delta_time
+#         last_error = error
+#         correction = kp * self.error + ki * self.integral + kd * derivative
+#         return correction, last_error
 
 
 

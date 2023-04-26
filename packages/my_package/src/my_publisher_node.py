@@ -19,6 +19,7 @@ class MyPublisherNode(DTROS):
 
         #--------------------------VARIABLES----------------------------------------------------------------------------------
 
+        self.integral = 0
         self.kp = 0.5
         self.ki = 0
         self.kd = 0
@@ -92,7 +93,17 @@ class MyPublisherNode(DTROS):
                 
                 #-----------------------------------PID CONTROLLER------------------------------------------------------------------
 
-                correction, self.last_error = pid.PID.PID_controller(self.error, self.last_error, self.kp, self.ki, self.kd)
+                #correction, self.last_error = pid.PID.PID_controller(self.error, self.last_error, self.kp, self.ki, self.kd)
+                self.integral = self.integral + (self.error + self.last_error)*self.delta_time/2
+                self.integral = max(min(self.integral,2), -2) #integrali piirang
+                derivative = (self.error - self.last_error)/self.delta_time
+
+                kp_adjusted = self.kp
+                ki_adjusted = self.ki
+                kd_adjusted = self.kd
+
+                # Calculate the PID correction factor
+                correction = kp_adjusted * self.error + ki_adjusted * self.integral + kd_adjusted * derivative
 
                 if correction > 1 or correction < -1:
                     correction = self.prev_correction

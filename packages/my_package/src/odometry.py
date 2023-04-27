@@ -65,9 +65,7 @@ class MyPublisherNode(DTROS):
             self.prev_tick_right = self.ticks_right
             self.wtravel = round(((d_left + d_right)*100)/2, 1) #roboti läbitud vahemaa (cm)
             self.kaugus_cm = round(self.range*100, 1) #TOF sensori tuvastatud kaugus (cm)
-            
 
-            #string = f"range: {tof}"
             if self.kaugus_cm <= 35: #õige on 35
                 self.odom.publish("odometry in progress")
                 while self.kaugus_cm <= 35: #tuvastades objekti 35cm kauguselt, pöörab robot paremale

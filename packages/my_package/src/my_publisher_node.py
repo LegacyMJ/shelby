@@ -52,17 +52,6 @@ class MyPublisherNode(DTROS):
 
     def odometry_list(self, data):
         self.odometry_info = data.data
-
-    def print_data_with_interval(self, correction):
-        self.print_counter = self.print_counter + 1
-        if self.print_counter == 15:
-            print("---| P =", rospy.get_param("/p"),
-                "|---| I =", rospy.get_param("/i"),
-                "|---| D =", rospy.get_param("/d"),
-                '|---| Speed =', rospy.get_param("/maxvel"),
-                '|---| Correction =', round(correction, 3),
-                "|---")
-            self.print_counter = 0
     
     def select_shorter_route(self, sensor, short_line_values):
         if sensor in short_line_values:
@@ -89,8 +78,8 @@ class MyPublisherNode(DTROS):
         if len(sensor) == 0: 
             speed.vel_left, speed.vel_right = self.previous_left, self.previous_right
         self.previous_left, self.previous_right = speed.vel_left, speed.vel_right
-        speed.vel_left = max(-0.0, min(speed.vel_left, 0.5)) 
-        speed.vel_right = max(-0.0, min(speed.vel_right, 0.5))
+        speed.vel_left = max(0.0, min(speed.vel_left, 0.5)) 
+        speed.vel_right = max(0.0, min(speed.vel_right, 0.5))
         print(correction)
         if self.right_turn:
             speed.vel_right = 0
@@ -120,7 +109,7 @@ class MyPublisherNode(DTROS):
 
             elif self.odometry_info == "odometry NOT in progress":
                 sensor, correction, self.prev_correction, self.last_error = pid.PID().run(self.last_error, self.prev_correction)
-                print(correction, sensor)
+                print(f"Correction: {correction}, line sensor value: {sensor}")
                 self.select_shorter_route(sensor, self.short_line_values)
                 self.turn_90_deg(sensor, self.right_values, self.left_values)
                 self.set_speed_and_speedlimit(correction, sensor)

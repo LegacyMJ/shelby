@@ -19,23 +19,25 @@ class MyPublisherNode(DTROS):
 
         #--------------------------VARIABLES----------------------------------------------------------------------------------
 
-        self.integral = 0
-        self.set_speed = 0.35
+        self.set_speed = 0.2
         self.last_error = 0
-        self.delta_time = 1/20
         self.odometry_info = 0
         self.correction = 0
         self.error = 0
         self.prev_correction = 0
+        self.right_turn = False
+        self.left_turn = False
 
         self.right_values = [[3,4,5,6,7,8],
                             [4,5,6,7,8],
                             [5,6,7,8],
+                            [5,6,7],
                             [6,7,8]]
             
         self.left_values = [[1,2,3,4,5,6],
                             [1,2,3,4,5],
                             [1,2,3,4],
+                            [2,3,4],
                             [1,2,3]]
         
         self.short_line_values = [[1,2,4,5],
@@ -64,21 +66,20 @@ class MyPublisherNode(DTROS):
     
     def select_shorter_route(self, sensor, short_line_values):
         if sensor in short_line_values:
-            speed.vel_left = self.set_speed 
-            speed.vel_right = self.set_speed*0.5
+            speed.vel_left, speed.vel_right = self.set_speed, self.set_speed*0.5
             self.pub.publish(speed)
             time.sleep(0.75)
             print("Short line")
 
     def turn_90_deg(self, sensor, right_values, left_values):
         if sensor in right_values:
-            self.error = 4.5 - 8
-            self.set_speed = 0.15
+            self.right_turn = True
             print("Right turn")
+            self.right_turn = True
         elif sensor in left_values:
-            self.error = 4.5 - 1
-            self.set_speed = 0.15
+            self.left_turn = True
             print("Left turn")
+            self.left_turn = True
         else:
             self.error = 4.5 - np.average(sensor)
 
@@ -86,19 +87,25 @@ class MyPublisherNode(DTROS):
         speed.vel_left = self.set_speed - correction
         speed.vel_right = self.set_speed + correction
         if len(sensor) == 0: 
-            speed.vel_left = self.previous_left
-            speed.vel_right = self.previous_right
-        self.previous_left = speed.vel_left
-        self.previous_right = speed.vel_right
+            speed.vel_left, speed.vel_right = self.previous_left, self.previous_right
+        self.previous_left, self.previous_right = speed.vel_left, speed.vel_right
         speed.vel_left = max(-0.0, min(speed.vel_left, 0.5)) 
         speed.vel_right = max(-0.0, min(speed.vel_right, 0.5))
         print(correction)
+        if self.right_turn:
+            speed.vel_right = 0
+            speed.vel_left = speed.vel_left*1.5
+            self.right_turn = False
+            self.pub.publish(speed)
+        elif self.left_turn:
+            speed.vel_left = 0
+            speed.vel_right = speed.vel_right*1.5
+            self.left_turn = False
+            self.pub.publish(speed)
         self.pub.publish(speed)
-        self.set_speed = 0.35
 
     def on_shutdown(self):
-        speed.vel_left = 0
-        speed.vel_right = 0
+        speed.vel_left, speed.vel_right = 0, 0
         self.pub.publish(speed)
         self.bus.close()
         time.sleep(0.2)
@@ -106,30 +113,22 @@ class MyPublisherNode(DTROS):
         
     def run(self):
         rate = rospy.Rate(20)
-
-        #----------------------------------MAIN CODE--------------------------------------------------------------------------
         while not rospy.is_shutdown():     
 
             if self.odometry_info == "odometry in progress":
                 print(self.odometry_info)
 
             elif self.odometry_info == "odometry NOT in progress":
-
-                #-----------------------------------SET SENSOR AND PID VALUES-------------------------------------------------------------
                 sensor, correction, self.prev_correction, self.last_error = pid.PID().run(self.last_error, self.prev_correction)
                 print(correction, sensor)
-
-                #-----------------------------------SELECTING SHORTER ROUTE---------------------------------------------------------------
                 self.select_shorter_route(sensor, self.short_line_values)
-
-                #-----------------------------------90 DEG CORNER SOLUTION----------------------------------------------------------------
                 self.turn_90_deg(sensor, self.right_values, self.left_values)
-
-                #-----------------------------------CONTINUE DRIVING WHILE OFF THE LINE / MAX AND MIN SPEED-------------------------------
                 self.set_speed_and_speedlimit(correction, sensor)
-                rate.sleep()          
+                rate.sleep()      
+
             else:
                 print("No odometry or PID in progress")
+
             rate.sleep()
 
 if __name__ == '__main__':

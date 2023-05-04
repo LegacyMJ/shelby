@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import rospy
-from std_msgs.msg import String
 from smbus2 import SMBus
 import numpy as np
 
@@ -9,11 +8,7 @@ class PID:
     def __init__(self):
         self.bus = SMBus(12)
         self.delta_time = 1/20
-        self.prev_integral = 0
-        self.odometry_info = 0
-        self.correction = 0
         self.integral = 0
-        self.prev_correction = 0
     
     def run(self, last_error, prev_correction):
         while not rospy.is_shutdown():     

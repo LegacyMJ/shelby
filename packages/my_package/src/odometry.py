@@ -69,25 +69,21 @@ class MyPublisherNode(DTROS):
             if self.kaugus_cm <= 35: #õige on 35
                 self.odom.publish("odometry in progress")
                 while self.kaugus_cm <= 35: #tuvastades objekti 35cm kauguselt, pöörab robot paremale
-                    speed.vel_left = 0.33
-                    speed.vel_right = 0.05
+                    speed.vel_left, speed.vel_right = 0.33, 0.05
                     self.pub.publish(speed)
                     self.kaugus_cm = round(self.range*100, 1)
                     print("odometry part 1")
                 time.sleep(0.2)
                 while self.wtraveltmp < 30: #robot sõidab 30cm otse
-                    speed.vel_left = 0.3 #0.3
-                    speed.vel_right = 0.3 #0.3
+                    speed.vel_left, speed.vel_right = 0.3, 0.3
                     self.pub.publish(speed)
                     self.wtraveltmp = self.wtraveltmp + self.wtravel
                     print("odometry part 2")
                 time.sleep(0.5)
-                speed.vel_left = 0.05 #robot pöörab vasakule
-                speed.vel_right = 0.4
+                speed.vel_left, speed.vel_right = 0.05, 0.4 #robot pöörab vasakule
                 self.pub.publish(speed)
                 time.sleep(1.2)
-                speed.vel_left = 0.3  #robot pöörab paremale
-                speed.vel_right = 0.05
+                speed.vel_left, speed.vel_right = 0.3, 0.05  #robot pöörab paremale
                 print("odometry part 3")
                 self.pub.publish(speed)
                 time.sleep(0.5)

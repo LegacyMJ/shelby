@@ -14,12 +14,10 @@ class MyPublisherNode(DTROS):
         # Publisherid ja subscriberid
         super(MyPublisherNode, self).__init__(node_name=node_name, node_type=NodeType.GENERIC)
         self.odom = rospy.Publisher('/shelby/odometry', String, queue_size=10)
-        #rospy.init_node('odometry', anonymous=True)
         self.pub = rospy.Publisher('/shelby/wheels_driver_node/wheels_cmd', WheelsCmdStamped, queue_size=10)
         self.tof = rospy.Subscriber('/shelby/front_center_tof_driver_node/range', Range, self.callback)
         self.rwheel = rospy.Subscriber('/shelby/right_wheel_encoder_node/tick', WheelEncoderStamped ,self.rightwheel)
         self.lwheel = rospy.Subscriber('/shelby/left_wheel_encoder_node/tick', WheelEncoderStamped, self.leftwheel)
-        self.range = 1
         self.right = 0
         self.left = 0
         self.ticks_left = 0
@@ -31,7 +29,7 @@ class MyPublisherNode(DTROS):
         self.delta_ticks_left = 0
         self.delta_ticks_right = 0
         self.n_tot = 135
-        self.kaugus_cm = 0
+        self.range = 0
         self.wtravel = 0
         self.wtraveltmp = 0
 
@@ -50,43 +48,43 @@ class MyPublisherNode(DTROS):
         rospy.on_shutdown()
 
     def talker(self):
-        rate = rospy.Rate(20) # 20hz
+        rate = rospy.Rate(20)
         while not rospy.is_shutdown():
-            R = 0.0318 #ratta raadius
+            R = 0.0318 
             self.ticks_right = self.right
             self.ticks_left = self.left
             self.delta_ticks_left = self.ticks_left-self.prev_tick_left
             self.delta_ticks_right = self.ticks_right-self.prev_tick_right
-            self.rotation_wheel_left = (2*np.pi/self.n_tot)*self.delta_ticks_left #vasaku ratta pöördenurk (rad)
-            self.rotation_wheel_right = (2*np.pi/self.n_tot)*self.delta_ticks_right #parema ratta pöördenurk (rad)
-            d_left = R * self.rotation_wheel_left #vasaku ratta läbitud vahemaa (cm)
-            d_right = R * self.rotation_wheel_right #parema ratta läbitud vahemaa (cm)
+            self.rotation_wheel_left = (2*np.pi/self.n_tot)*self.delta_ticks_left 
+            self.rotation_wheel_right = (2*np.pi/self.n_tot)*self.delta_ticks_right 
+            d_left = R * self.rotation_wheel_left 
+            d_right = R * self.rotation_wheel_right 
             self.prev_tick_left = self.ticks_left
             self.prev_tick_right = self.ticks_right
-            self.wtravel = round(((d_left + d_right)*100)/2, 1) #roboti läbitud vahemaa (cm)
-            self.kaugus_cm = round(self.range*100, 1) #TOF sensori tuvastatud kaugus (cm)
+            self.wtravel = round(((d_left + d_right)*100)/2, 1) 
+            self.range = round(self.range*100, 1) 
 
-            if self.kaugus_cm <= 35: #õige on 35
+            if self.range <= 38: 
                 self.odom.publish("odometry in progress")
-                while self.kaugus_cm <= 35: #tuvastades objekti 35cm kauguselt, pöörab robot paremale
-                    speed.vel_left, speed.vel_right = 0.33, 0.05
+                while self.range <= 38: 
+                    speed.vel_left, speed.vel_right = 0.36, 0.05
                     self.pub.publish(speed)
-                    self.kaugus_cm = round(self.range*100, 1)
+                    self.range = round(self.range*100, 1)
                     print("odometry part 1")
                 time.sleep(0.2)
-                while self.wtraveltmp < 30: #robot sõidab 30cm otse
+                while self.wtraveltmp < 30: 
                     speed.vel_left, speed.vel_right = 0.3, 0.3
                     self.pub.publish(speed)
                     self.wtraveltmp = self.wtraveltmp + self.wtravel
                     print("odometry part 2")
-                time.sleep(0.5)
-                speed.vel_left, speed.vel_right = 0.05, 0.4 #robot pöörab vasakule
+                time.sleep(0.3)
+                speed.vel_left, speed.vel_right = 0.05, 0.45 
                 self.pub.publish(speed)
-                time.sleep(1.2)
-                speed.vel_left, speed.vel_right = 0.3, 0.05  #robot pöörab paremale
+                time.sleep(1.5)
+                speed.vel_left, speed.vel_right = 0.35, 0.05  
                 print("odometry part 3")
                 self.pub.publish(speed)
-                time.sleep(0.5)
+                #time.sleep(1.0)
                 self.wtraveltmp = 0
                 
             else:

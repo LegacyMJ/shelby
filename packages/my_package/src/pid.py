@@ -13,13 +13,13 @@ class PID:
     def run(self, last_error, prev_correction):
         while not rospy.is_shutdown():     
             read = self.bus.read_byte_data(62,17)
-            read = bin(read)[2:].zfill(8) #joonelugeri andmete lugemine binaaris nii, et väljastatav väärtus oleks alati 8-kohaline
+            read = bin(read)[2:].zfill(8) 
 
             self.kp = float(rospy.get_param("/p", 0)) 
             self.ki = float(rospy.get_param("/i", 0))
             self.kd = float(rospy.get_param("/d", 0)) 
 
-            sensor = [] #joonelugeri tuvastused vahemikus 1-8   
+            sensor = [] 
             for indx, nr in enumerate(read):
                 if nr == "1":
                     sensor.append(indx + 1)

@@ -19,7 +19,7 @@ class MyPublisherNode(DTROS):
 
         #--------------------------VARIABLES----------------------------------------------------------------------------------
 
-        self.set_speed = 0.2
+        self.set_speed = 0.15
         self.last_error = 0
         self.odometry_info = 0
         self.correction = 0
@@ -33,7 +33,7 @@ class MyPublisherNode(DTROS):
                             [5,6,7,8],
                             [5,6,7],
                             [6,7,8]]
-            
+        
         self.left_values = [[1,2,3,4,5,6],
                             [1,2,3,4,5],
                             [1,2,3,4],
@@ -78,8 +78,8 @@ class MyPublisherNode(DTROS):
         if len(sensor) == 0: 
             speed.vel_left, speed.vel_right = self.previous_left, self.previous_right
         self.previous_left, self.previous_right = speed.vel_left, speed.vel_right
-        speed.vel_left = max(0.0, min(speed.vel_left, 0.5)) 
-        speed.vel_right = max(0.0, min(speed.vel_right, 0.5))
+        speed.vel_left = max(0.005, min(speed.vel_left, 0.5)) 
+        speed.vel_right = max(0.005, min(speed.vel_right, 0.5))
         print(correction)
         if self.right_turn:
             speed.vel_right = 0
@@ -124,4 +124,4 @@ if __name__ == '__main__':
     node = MyPublisherNode(node_name='my_publisher_node')
     rospy.on_shutdown(node.on_shutdown)
     node.run()
-    rospy.spin() #paneb koodi uuesti käima, loopi
+    rospy.spin() 

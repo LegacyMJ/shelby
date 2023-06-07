@@ -7,116 +7,40 @@ import numpy as np
 class PID:
     def __init__(self):
         self.bus = SMBus(12)
-        self.delta_time = 1/20
-        self.integral = 0
+        self.delta_time = 1/20  # Time interval for PID control
+        self.integral = 0  # Integral term for PID control
     
     def run(self, last_error, prev_correction):
-        while not rospy.is_shutdown():     
-            read = self.bus.read_byte_data(62,17)
-            read = bin(read)[2:].zfill(8) 
+        while not rospy.is_shutdown():
+            # Read sensor data from the bus
+            read = self.bus.read_byte_data(62, 17)
+            read = bin(read)[2:].zfill(8)  # Convert the data to binary representation
 
-            self.kp = float(rospy.get_param("/p", 0)) 
-            self.ki = float(rospy.get_param("/i", 0))
-            self.kd = float(rospy.get_param("/d", 0)) 
+            self.kp = float(rospy.get_param("/p", 0.05))  # Get the proportional gain from ROS parameter server
+            self.ki = float(rospy.get_param("/i", 0.001))  # Get the integral gain from ROS parameter server
+            self.kd = float(rospy.get_param("/d", 0.015))  # Get the derivative gain from ROS parameter server
 
-            sensor = [] 
+            sensor = []  # List to store activated sensor indices
             for indx, nr in enumerate(read):
                 if nr == "1":
                     sensor.append(indx + 1)
-            
+
             if len(sensor) > 0:
-                error = 4.5 - np.average(sensor)
+                error = 4.5 - np.average(sensor)  # Calculate the average error
             else:
                 error = 0
 
-            self.integral = self.integral + (error + last_error)*self.delta_time/2
-            self.integral = max(min(self.integral,2), -2) 
-            derivative = (error - last_error)/self.delta_time
+            self.integral = self.integral + (error + last_error) * self.delta_time / 2  # Update the integral term
+            self.integral = max(min(self.integral, 2), -2)  # Limit the integral term within a range
+            derivative = (error - last_error) / self.delta_time  # Calculate the derivative term
             last_error = error
+
+            # Calculate the correction using the PID formula
             correction = self.kp * error + self.ki * self.integral + self.kd * derivative
 
             if correction > 1 or correction < -1:
-                    correction = prev_correction
+                correction = prev_correction  # Limit the correction within a range
             else:
                 prev_correction = correction
 
             return sensor, correction, prev_correction, last_error
-
-
-
-
-'''
-import tkinter as tk
-import rospy
-
-root = tk.Tk()
-root.geometry('500x360')
-root.resizable(False, False)
-root.title('PID Controller')
-
-slider_length = 360
-
-#p_param = rospy.get_param('/p')
-#print(p_param)
-
-def p_upd(p_val):
-    rospy.set_param('/p', p_val)
-    print('P', p_val)
-    
-def i_upd(i_val):
-    rospy.set_param('/i', i_val)
-    print('I ', i_val)
-    
-def d_upd(d_val):
-    rospy.set_param('/d', d_val)
-    print('D ', d_val)
-    
-p = tk.Scale(root,
-             from_ = 0.0,
-             to = 0.5,
-             orient = 'horizontal',
-             resolution = 0.001,
-             length = slider_length,
-             command = p_upd)
-p.grid(row = 1,
-       column = 1,
-       padx = 20,
-       pady = 20,)
-
-p_label = tk.Label(text= 'P')
-p_label.grid(row = 1, padx = 5)
-
-i = tk.Scale(root,
-             from_ = 0.0,
-             to = 0.1,
-             orient = 'horizontal',
-             resolution = 0.001,
-             length = slider_length,
-             command = i_upd)
-i.grid(row = 2,
-       column = 1,
-       padx = 20,
-       pady = 20)
-
-i_label = tk.Label(text= 'I')
-i_label.grid(row = 2, padx = 5)
-
-d = tk.Scale(root,
-             from_ = 0.0,
-             to = 0.1,
-             orient = 'horizontal',
-             resolution = 0.0001,
-             length = slider_length,
-             command = d_upd)
-d.grid(row = 3,
-       column = 1,
-       padx = 20,
-       pady = 20)
-
-d_label = tk.Label(text= 'D')
-d_label.grid(row = 3, padx = 5)
-
-
-root.mainloop() '''
-
-#p,i,d = 0.045, 0.001, 0.015

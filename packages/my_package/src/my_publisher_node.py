@@ -55,6 +55,7 @@ class MyPublisherNode(DTROS):
         self.odometry_info = data.data
     
     def select_shorter_route(self, sensor, short_line_values):
+        # Function to select a shorter route if a certain sensor value is detected
         if sensor in short_line_values:
             speed.vel_left, speed.vel_right = self.set_speed, self.set_speed*1.5
             self.pub.publish(speed)
@@ -62,6 +63,7 @@ class MyPublisherNode(DTROS):
             print("Short line")
 
     def turn_90_deg(self, sensor, right_values, left_values):
+        # Function to handle a 90-degree turn based on the sensor values
         if sensor in right_values:
             self.right_turn = True
             print("Right turn")
@@ -74,6 +76,7 @@ class MyPublisherNode(DTROS):
             self.error = 4.5 - np.average(sensor)
 
     def set_speed_and_speedlimit(self, correction, sensor):
+        # Function to set the speed and speed limit of the robot based on the correction value and sensor data
         speed.vel_left = self.set_speed - correction
         speed.vel_right = self.set_speed + correction
         if len(sensor) == 0: 
@@ -97,11 +100,13 @@ class MyPublisherNode(DTROS):
     def on_shutdown(self):
         speed.vel_left, speed.vel_right = 0, 0
         self.pub.publish(speed)
-        self.bus.close()
         time.sleep(0.2)
         rospy.on_shutdown()
         
     def run(self):
+        # Run function
+        # While obstacles are not detected (Odometry NOT in progress) PID and line following is in progress
+        # If obstacle is detected, PID and line following is turned off and odometry begins its progress
         rate = rospy.Rate(20)
         while not rospy.is_shutdown():     
 

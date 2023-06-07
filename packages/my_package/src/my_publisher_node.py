@@ -13,13 +13,14 @@ class MyPublisherNode(DTROS):
     def __init__(self, node_name):
         # initialize parent class
         super(MyPublisherNode, self).__init__(node_name=node_name, node_type=NodeType.GENERIC)
-        # Publisherid ja subscriberid
+        # setup publisher for wheel commands
         self.pub = rospy.Publisher('/shelby/wheels_driver_node/wheels_cmd', WheelsCmdStamped, queue_size=10)
+        # setup subscriber for odometry
         self.odometry = rospy.Subscriber('/shelby/odometry', String, self.odometry_list)
 
         #--------------------------VARIABLES----------------------------------------------------------------------------------
 
-        self.set_speed = 0.15
+        self.set_speed = 0.2
         self.last_error = 0
         self.odometry_info = 0
         self.correction = 0
@@ -55,7 +56,7 @@ class MyPublisherNode(DTROS):
     
     def select_shorter_route(self, sensor, short_line_values):
         if sensor in short_line_values:
-            speed.vel_left, speed.vel_right = self.set_speed, self.set_speed*0.5
+            speed.vel_left, speed.vel_right = self.set_speed, self.set_speed*1.5
             self.pub.publish(speed)
             time.sleep(0.75)
             print("Short line")
@@ -78,8 +79,8 @@ class MyPublisherNode(DTROS):
         if len(sensor) == 0: 
             speed.vel_left, speed.vel_right = self.previous_left, self.previous_right
         self.previous_left, self.previous_right = speed.vel_left, speed.vel_right
-        speed.vel_left = max(0.005, min(speed.vel_left, 0.5)) 
-        speed.vel_right = max(0.005, min(speed.vel_right, 0.5))
+        speed.vel_left = max(0.0, min(speed.vel_left, 0.3)) 
+        speed.vel_right = max(0.0, min(speed.vel_right, 0.3))
         print(correction)
         if self.right_turn:
             speed.vel_right = 0
